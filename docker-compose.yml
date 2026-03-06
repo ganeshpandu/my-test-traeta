@@ -77,17 +77,11 @@ services:
     restart: always
     ports:
       - "80:80"
-      - "443:443"
     networks:
       - traeta-network
     depends_on:
       - user-service
       - master-service
-    volumes:
-      - /etc/letsencrypt/live/dev.traeta.com:/etc/letsencrypt/live/dev.traeta.com:ro
-      - /etc/letsencrypt/archive/dev.traeta.com:/etc/letsencrypt/archive/dev.traeta.com:ro
-      - /etc/letsencrypt/renewal:/etc/letsencrypt/renewal:ro
-      - /var/www/certbot:/var/www/certbot
 
 networks:
   traeta-network:

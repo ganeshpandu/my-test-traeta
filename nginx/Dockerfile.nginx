@@ -9,4 +9,4 @@ RUN mkdir -p /usr/share/nginx/html/.well-known
 COPY apple-app-site-association /usr/share/nginx/html/.well-known/apple-app-site-association
 COPY assetlinks.json /usr/share/nginx/html/.well-known/assetlinks.json
 
-EXPOSE 80 443 
+EXPOSE 80 
