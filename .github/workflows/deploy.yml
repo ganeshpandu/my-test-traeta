@@ -1,20 +1,23 @@
-name: Deploy to GCP VM..
+name: Deploy to GCP VM
 
 on:
   push:
     branches:
-      - "develop"
+      - "main"
 
 jobs:
+
   checkout:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+
   build-and-push:
     needs: checkout
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,70 +27,85 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
       - name: Configure Docker for GAR
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
       - name: Build Docker Image
         run: |
           docker build --no-cache \
-            -t us-central1-docker.pkg.dev/traeta-data/traeta-gar/traeta-backend:latest .
+          -t us-central1-docker.pkg.dev/project-4ef36a3c-319a-4cbc-93a/traeta-gar/traeta-backend:latest .
 
       - name: Push Image to GAR
-        run: docker push us-central1-docker.pkg.dev/traeta-data/traeta-gar/traeta-backend:latest
+        run: |
+          docker push us-central1-docker.pkg.dev/project-4ef36a3c-319a-4cbc-93a/traeta-gar/traeta-backend:latest
+
+
 
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
-    steps:
-      - name: Prepare SSH Key
-        run: |
-          echo "${{ secrets.GCP_SSH_PRIVATE_KEY }}" > private_key
-          chmod 600 private_key
 
-      - name: Deploy on VM (pull image & restart containers)
+    steps:
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy using IAP
         run: |
-          ssh -o StrictHostKeyChecking=no -i private_key \
-          ${{ secrets.GCP_VM_USER }}@${{ secrets.GCP_VM_HOST }} << "EOF"
+          gcloud compute ssh ${{ secrets.GCP_VM_NAME }} \
+          --zone=${{ secrets.GCP_VM_ZONE }} \
+          --tunnel-through-iap \
+          --command "
+            set -e
+
             cd /opt/traeta-server
 
-            echo "Updating .env..."
-            echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 --decode > .env
+            echo 'Updating .env...'
+            echo '${{ secrets.ENV_FILE_BASE64 }}' | base64 --decode > .env
 
-            echo "Authenticating Docker to GAR..."
+            echo 'Authenticating Docker to GAR...'
             gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-            IMAGE="us-central1-docker.pkg.dev/traeta-data/traeta-gar/traeta-backend"
+            IMAGE='us-central1-docker.pkg.dev/project-4ef36a3c-319a-4cbc-93a/traeta-gar/traeta-backend'
 
-            echo "Keeping last 2 backend images as backup..."
-            docker images "$IMAGE" --format "{{.ID}} {{.CreatedAt}}" \
+            echo 'Keeping last 2 backend images as backup...'
+            docker images \"\$IMAGE\" --format '{{.ID}} {{.CreatedAt}}' \
               | sort -rk2 \
-              | awk 'NR>2 {print $1}' \
+              | awk 'NR>2 {print \$1}' \
               | xargs -r docker rmi
 
-            echo "Removing unused images and build cache..."
+            echo 'Removing unused images and build cache...'
             docker image prune -f
             docker builder prune -f
 
-            echo "Pulling latest image from GAR..."
-            docker pull us-central1-docker.pkg.dev/traeta-data/traeta-gar/traeta-backend:latest
+            echo 'Pulling latest image...'
+            docker pull \$IMAGE:latest
 
-            echo "Checking if this is the first deployment..."
-            if [ ! "$(docker ps -a -q -f name=traeta-postgres)" ]; then
-              echo "First-time setup: starting all containers including Postgres..."
+            echo 'Checking if first deployment...'
+            if [ ! \"\$(docker ps -a -q -f name=traeta-postgres)\" ]; then
+              echo 'First-time setup'
               docker compose -f docker-compose.yml \
                 --project-directory /opt/traeta-server \
                 -p traeta up -d --build --pull always
             else
-              echo "Updating app containers only (excluding Postgres)..."
-              docker rm -f user-service master-service traeta-nginx || echo "Some containers may not have been running"
+              echo 'Updating app containers'
+              docker rm -f user-service master-service traeta-nginx || true
               docker compose -f docker-compose.yml \
                 --project-directory /opt/traeta-server \
                 -p traeta up -d --build --no-deps \
                 user-service master-service traeta-nginx
             fi
 
-            echo "Deployment completed."
-          EOF
+            echo 'Deployment completed.'
+          "
 
       - name: Verify services are healthy
         run: |
