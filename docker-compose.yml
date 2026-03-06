@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   user-service:
-    image: us-central1-docker.pkg.dev/traeta-data/traeta-gar/traeta-backend:latest
+    image: us-central1-docker.pkg.dev/project-4ef36a3c-319a-4cbc-93a/traeta-gar/traeta-backend:latest
     container_name: user-service
     restart: always
     command: ["sh", "-c", "/app/start.sh"]
@@ -26,7 +26,7 @@ services:
       retries: 5
 
   master-service:
-    image: us-central1-docker.pkg.dev/traeta-data/traeta-gar/traeta-backend:latest
+    image: us-central1-docker.pkg.dev/project-4ef36a3c-319a-4cbc-93a/traeta-gar/traeta-backend:latest
     container_name: master-service
     restart: always
     command: ["sh", "-c", "/app/start.sh"]
