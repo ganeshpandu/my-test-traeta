@@ -1,0 +1,365 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model MasterData {
+  masterDataId String @default(uuid()) @db.VarChar(36)
+  recSeq       Int    @default(0)
+  recStatus    String @default("A")
+
+  keyCode  String  @db.VarChar(50)
+  value    String? @db.VarChar(50)
+  parentId String? @db.VarChar(50)
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  users Users[]
+
+  @@id([masterDataId, recSeq])
+}
+
+model Users {
+  userId    String @default(uuid()) @db.VarChar(36)
+  recSeq    Int    @default(0)
+  recStatus String @default("A")
+
+  email             String?
+  phoneNumber       String    @default("")
+  firstName         String?   @db.VarChar(50)
+  lastName          String?   @db.VarChar(50)
+  username          String?   @db.VarChar(50)
+  tagline           String?   @db.VarChar(100)
+  dateOfBirth       DateTime? @db.Date
+  gender            Gender?
+  avatarId          String?   @db.VarChar(36)
+  avatarRecSeq      Int?      @default(0)
+  isProfileComplete Boolean   @default(false)
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  avatar                  MasterData?               @relation(fields: [avatarId, avatarRecSeq], references: [masterDataId, recSeq], onDelete: Cascade)
+  userIntegrations        UserIntegrations[]
+  userLists               UserLists[]
+  loginActionHistory      LoginActionHistory[]
+  OAuthCredentials        OAuthCredentials[]
+  locationDataSubmissions LocationDataSubmissions[]
+
+  @@id([userId, recSeq])
+  @@unique([userId, email, phoneNumber, username, recSeq])
+}
+
+model LoginActionHistory {
+  loginActionHistoryId String @default(uuid()) @db.VarChar(36)
+  recSeq               Int    @default(0)
+  recStatus            String @default("A")
+
+  userId       String       @db.VarChar(36)
+  userRecSeq   Int          @default(0)
+  action       String       @db.VarChar(50)
+  actionOn     DateTime     @default(now())
+  actionStatus ActionStatus @default(SUCCESS)
+  reason       String?      @db.VarChar(100)
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  user Users @relation(fields: [userId, userRecSeq], references: [userId, recSeq], onDelete: Cascade)
+
+  @@id([loginActionHistoryId, recSeq])
+}
+
+model Integrations {
+  integrationId String @default(uuid()) @db.VarChar(36)
+  recSeq        Int    @default(0)
+  recStatus     String @default("A")
+
+  name       String @db.VarChar(50)
+  label      String? @db.VarChar(50)
+  popularity Int?   @db.Integer
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  listMappings            ListIntegrationMapping[]
+  userIntegrations        UserIntegrations[]
+  oAuthCredentials        OAuthCredentials[]
+  locationDataSubmissions LocationDataSubmissions[]
+
+  @@id([integrationId, recSeq])
+}
+
+model Lists {
+  listId    String @default(uuid()) @db.VarChar(36)
+  recSeq    Int    @default(0)
+  recStatus String @default("A")
+
+  name String @db.VarChar(50)
+  listIcon String? @db.VarChar(50)
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  integrations ListIntegrationMapping[]
+  categories   ItemCategories[]
+  items        ListItems[]
+  userLists    UserLists[]
+
+  @@id([listId, recSeq])
+}
+
+model ListIntegrationMapping {
+  listIntegrationMappingId String @default(uuid()) @db.VarChar(36)
+  recSeq                   Int    @default(0)
+  recStatus                String @default("A")
+
+  listId            String @db.VarChar(36)
+  listRecSeq        Int    @default(0)
+  integrationId     String @db.VarChar(36)
+  integrationRecSeq Int    @default(0)
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  list        Lists        @relation(fields: [listId, listRecSeq], references: [listId, recSeq], onDelete: Cascade)
+  integration Integrations @relation(fields: [integrationId, integrationRecSeq], references: [integrationId, recSeq], onDelete: Cascade)
+
+  @@id([listIntegrationMappingId, recSeq])
+}
+
+model UserIntegrations {
+  userIntegrationId String @default(uuid()) @db.VarChar(36)
+  recSeq            Int    @default(0)
+  recStatus         String @default("A")
+
+  userId            String @db.VarChar(36)
+  userRecSeq        Int    @default(0)
+  integrationId     String @db.VarChar(36)
+  integrationRecSeq Int    @default(0)
+  status            String @db.VarChar(50)
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  user        Users                    @relation(fields: [userId, userRecSeq], references: [userId, recSeq], onDelete: Cascade)
+  integration Integrations             @relation(fields: [integrationId, integrationRecSeq], references: [integrationId, recSeq], onDelete: Cascade)
+  history     UserIntegrationHistory[]
+
+  @@id([userIntegrationId, recSeq])
+}
+
+model UserIntegrationHistory {
+  userIntegrationHistoryId String @default(uuid()) @db.VarChar(36)
+  recSeq                   Int    @default(0)
+  recStatus                String @default("A")
+
+  userIntegrationId     String    @db.VarChar(36)
+  userIntegrationRecSeq Int       @default(0)
+  firstConnectedAt      DateTime? @db.Timestamp
+  lastConnectedAt       DateTime? @db.Timestamp
+  lastSyncedAt          DateTime? @db.Timestamp
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  userIntegration UserIntegrations @relation(fields: [userIntegrationId, userIntegrationRecSeq], references: [userIntegrationId, recSeq], onDelete: Cascade)
+
+  @@id([userIntegrationHistoryId, recSeq])
+}
+
+model UserLists {
+  userListId String @default(uuid()) @db.VarChar(36)
+  recSeq     Int    @default(0)
+  recStatus  String @default("A")
+
+  userId     String  @db.VarChar(36)
+  userRecSeq Int     @default(0)
+  listId     String  @db.VarChar(36)
+  listRecSeq Int     @default(0)
+  customName String? @db.VarChar(50)
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  user         Users                  @relation(fields: [userId, userRecSeq], references: [userId, recSeq], onDelete: Cascade)
+  list         Lists                  @relation(fields: [listId, listRecSeq], references: [listId, recSeq], onDelete: Cascade)
+
+  @@id([userListId, recSeq])
+  ListItems ListItems[]
+}
+
+model ItemCategories {
+  itemCategoryId String @default(uuid()) @db.VarChar(36)
+  recSeq         Int    @default(0)
+  recStatus      String @default("A")
+
+  listId     String @db.VarChar(36)
+  listRecSeq Int    @default(0)
+  name       String @db.VarChar(50)
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  list  Lists       @relation(fields: [listId, listRecSeq], references: [listId, recSeq], onDelete: Cascade)
+  items ListItems[]
+
+  @@id([itemCategoryId, recSeq])
+}
+
+model ListItems {
+  listItemId String @default(uuid()) @db.VarChar(36)
+  recSeq     Int    @default(0)
+  recStatus  String @default("A")
+
+  listId            String  @db.VarChar(36)
+  listRecSeq        Int     @default(0)
+  categoryId        String? @db.VarChar(36)
+  categoryRecSeq    Int?    @default(0)
+  userListId        String? @db.VarChar(36)
+  userListRecSeq    Int?    @default(0)
+  title             String? @db.VarChar(500)
+  notes             String? @db.VarChar(500)
+  starred           Boolean @default(false)
+  attributes        Json?   @db.Json
+  attributeDataType Json?   @db.Json
+  unit              Json?   @db.Json
+  isCustom          Boolean @default(false)
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  list     Lists           @relation(fields: [listId, listRecSeq], references: [listId, recSeq], onDelete: Cascade)
+  category ItemCategories? @relation(fields: [categoryId, categoryRecSeq], references: [itemCategoryId, recSeq], onDelete: Cascade)
+  userList UserLists?      @relation(fields: [userListId, userListRecSeq], references: [userListId, recSeq], onDelete: Cascade)
+
+  @@id([listItemId, recSeq])
+}
+
+// OAuth credentials for providers (encrypted tokens)
+model OAuthCredentials {
+  oauthCredentialId String @default(uuid()) @db.VarChar(36)
+  recSeq            Int    @default(0)
+  recStatus         String @default("A")
+
+  userId            String @db.VarChar(36)
+  userRecSeq        Int    @default(0)
+  integrationId     String @db.VarChar(36)
+  integrationRecSeq Int    @default(0)
+
+  accessTokenEnc  String // AES-GCM ciphertext (base64: iv:ciphertext:tag)
+  refreshTokenEnc String?
+  expiresAt       DateTime?
+  scope           String?
+  providerUserId  String?
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  user        Users        @relation(fields: [userId, userRecSeq], references: [userId, recSeq], onDelete: Cascade)
+  integration Integrations @relation(fields: [integrationId, integrationRecSeq], references: [integrationId, recSeq], onDelete: Cascade)
+
+  @@id([oauthCredentialId, recSeq])
+  @@unique([userId, userRecSeq, integrationId, integrationRecSeq])
+}
+
+model Logtable {
+  id        Int     @id @default(autoincrement()) // Generates SERIAL behavior
+  requestId String? 
+  log       String?
+}
+
+// Location data submissions from frontend (temporary storage until processed)
+model LocationDataSubmissions {
+  locationDataSubmissionId String @default(uuid()) @db.VarChar(36)
+  recSeq                   Int    @default(0)
+  recStatus                String @default("A")
+
+  userId            String    @db.VarChar(36)
+  userRecSeq        Int       @default(0)
+  integrationId     String    @db.VarChar(36)
+  integrationRecSeq Int       @default(0)
+  locationData      Json      @db.Json // Array of location objects with lat, lng, timestamp, etc.
+  submittedAt       DateTime  @default(now())
+  processedAt       DateTime? // Null until sync processes the data
+  processed         Boolean   @default(false)
+
+  dataStatus String   @default("A") @db.VarChar(1)
+  createdBy  String   @default("System")
+  createdOn  DateTime @default(now())
+  modifiedOn DateTime @updatedAt
+  modifiedBy String?  @db.VarChar(50)
+
+  // Relations
+  user        Users        @relation(fields: [userId, userRecSeq], references: [userId, recSeq], onDelete: Cascade)
+  integration Integrations @relation(fields: [integrationId, integrationRecSeq], references: [integrationId, recSeq], onDelete: Cascade)
+
+  @@id([locationDataSubmissionId, recSeq])
+  @@index([userId, integrationId, processed])
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  NON_BINARY
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum ActionStatus {
+  SUCCESS
+  FAILED
+}

@@ -1,0 +1,57 @@
+{
+  "name": "traeta-backend",
+  "version": "1.0.0",
+  "description": "Backend services for Traeta platform",
+  "private": true,
+  "workspaces": [
+    "masterData-service",
+    "user-service",
+    "libs/*"
+  ],
+  "scripts": {
+    "start:masterdata": "cd masterData-service && npm run start",
+    "start:masterdata:dev": "cd masterData-service && npm run start:dev",
+    "start:user": "cd user-service && npm run start",
+    "start:user:dev": "cd user-service && npm run start:dev",
+    "start:all": "concurrently \"npm run start:masterdata\" \"npm run start:user\"",
+    "start:all:dev": "concurrently \"npm run start:masterdata:dev\" \"npm run start:user:dev\"",
+    "install:all": "npm install && cd masterData-service && npm install && cd ../user-service && npm install && cd ../libs/prisma && npm install",
+    "check-env": "cd user-service && npm run check-env",
+    "test:integrations": "cd user-service && npm run test:integrations",
+    "test:integrations:quick": "cd user-service && npm run test:integrations:quick",
+    "test:integrations:unit": "cd user-service && npm run test:integrations:unit",
+    "test:runner": "cd user-service && npm run test:runner",
+    "build:all": "npm run -w user-service build && npm run -w masterData-service build"
+  },
+  "keywords": [
+    "Traeta",
+    "Backend",
+    "Microservices"
+  ],
+  "author": "Techvedika",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@nestjs/axios": "^4.0.0",
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.2.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "cheerio": "^1.1.2",
+    "dotenv": "^17.0.0",
+    "html-to-text": "^9.0.5",
+    "jsonwebtoken": "^9.0.2",
+    "mailparser": "^3.9.0",
+    "pg": "^8.16.3",
+    "quoted-printable": "^1.0.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.1",
+    "techvedika-logger": "^0.0.2",
+    "uuid": "^11.1.0"
+  }
+}

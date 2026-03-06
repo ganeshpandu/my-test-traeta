@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "UserIntegrationHistory" ALTER COLUMN "firstConnectedAt" SET DATA TYPE TIMESTAMP,
+ALTER COLUMN "lastConnectedAt" SET DATA TYPE TIMESTAMP,
+ALTER COLUMN "lastSyncedAt" SET DATA TYPE TIMESTAMP;

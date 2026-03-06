@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  user-service:
+    image: us-central1-docker.pkg.dev/traeta-data/traeta-gar/traeta-backend:latest
+    container_name: user-service
+    restart: always
+    command: ["sh", "-c", "/app/start.sh"]
+    environment:
+      SERVICE_NAME: user-service
+    ports:
+      - "3001:3001"
+    networks:
+      - traeta-network
+    depends_on:
+      traeta-postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - /var/log/traeta/user-service:/app/user-service/logs:rw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h traeta-postgres -d traeta-db && nc -z 127.0.0.1 3001"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  master-service:
+    image: us-central1-docker.pkg.dev/traeta-data/traeta-gar/traeta-backend:latest
+    container_name: master-service
+    restart: always
+    command: ["sh", "-c", "/app/start.sh"]
+    environment:
+      SERVICE_NAME: master-service
+    ports:
+      - "3002:3002"
+    networks:
+      - traeta-network
+    depends_on:
+      traeta-postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - /var/log/traeta/master-service:/app/masterData-service/logs:rw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h traeta-postgres -d traeta-db && nc -z 127.0.0.1 3002"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  traeta-postgres:
+    image: postgres:15
+    container_name: traeta-postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    networks:
+      - traeta-network
+    volumes:
+      - /opt/docker/postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Techv1@3
+      POSTGRES_DB: traeta-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h traeta-postgres -d traeta-db"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  traeta-nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile.nginx
+    container_name: traeta-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - traeta-network
+    depends_on:
+      - user-service
+      - master-service
+    volumes:
+      - /etc/letsencrypt/live/dev.traeta.com:/etc/letsencrypt/live/dev.traeta.com:ro
+      - /etc/letsencrypt/archive/dev.traeta.com:/etc/letsencrypt/archive/dev.traeta.com:ro
+      - /etc/letsencrypt/renewal:/etc/letsencrypt/renewal:ro
+      - /var/www/certbot:/var/www/certbot
+
+networks:
+  traeta-network:
+    external: true

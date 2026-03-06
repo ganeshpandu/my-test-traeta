@@ -1,0 +1,17 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "traeta.traeta",
+      "sha256_cert_fingerprints": [
+      "EE:57:7E:8C:A5:F2:4C:69:A3:55:01:04:96:02:9B:70:E4:2D:E4:F9:F8:EA:8D:86:0E:3D:25:C1:8E:A6:1B:50",
+        "C5:76:02:A4:9F:8E:46:B4:BD:73:FA:C1:EC:0C:2A:6E:1B:30:EA:DD:6C:3F:25:FA:F3:A9:79:CB:B6:FB:43:8E",
+        "6A:34:0E:93:A5:28:49:4F:61:30:68:2B:0B:7B:69:6A:C0:92:C5:76:ED:B5:02:C7:64:8A:09:3C:EE:D4:45:A7" 
+      
+      ]
+    }
+  }
+]

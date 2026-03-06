@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "public"."ListItems" ALTER COLUMN "title" SET DATA TYPE VARCHAR(500),
+ALTER COLUMN "notes" SET DATA TYPE VARCHAR(500);

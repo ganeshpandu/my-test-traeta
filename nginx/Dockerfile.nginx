@@ -1,0 +1,12 @@
+FROM nginx:alpine
+
+# Copy custom Nginx config (path relative to context .)
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+RUN mkdir -p /usr/share/nginx/html/.well-known
+
+# these files are at project root, so copy by their filenames
+COPY apple-app-site-association /usr/share/nginx/html/.well-known/apple-app-site-association
+COPY assetlinks.json /usr/share/nginx/html/.well-known/assetlinks.json
+
+EXPOSE 80 443 

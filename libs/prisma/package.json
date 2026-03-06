@@ -1,0 +1,20 @@
+{
+    "name": "@traeta/prisma",
+    "version": "0.0.1",
+    "private": true,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "prisma:generate": "prisma generate --schema=./schema.prisma",
+        "prepare": "npm run build"
+    },
+    "dependencies": {
+        "@prisma/client": "6.19.0",
+        "@nestjs/common": "^11.0.1"
+    },
+    "devDependencies": {
+        "prisma": "6.19.0",
+        "typescript": "^5.7.3"
+    }
+}
