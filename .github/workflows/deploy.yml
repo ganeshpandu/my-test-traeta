@@ -60,7 +60,7 @@ jobs:
 
       - name: Deploy using IAP
         run: |
-          gcloud compute ssh ${{ secrets.GCP_VM_NAME }} \
+          gcloud compute ssh ganeshpandu246@${{ secrets.GCP_VM_NAME }} \
           --zone=${{ secrets.GCP_VM_ZONE }} \
           --tunnel-through-iap \
           --command "
